@@ -33,7 +33,9 @@ The paths mirror where Cairn sits in a project, so it drops straight in:
 2. From the project root: `node scripts/cairn/cairn.mjs init` to see the changes, then `init --yes` to apply. It
    writes the hooks and permission rule into `.claude/settings.json`, scopes the store in `.gitignore`, pins the
    repo key in `.claude/cairn/config.json`, and chains `cairn mine` onto git's post-commit hook.
-3. Paste `snippets/CLAUDE.cairn.md` into the project's CLAUDE.md.
+3. Paste `snippets/CLAUDE.cairn.md` into the project's CLAUDE.md (and change its "copied from Seco" line).
+   Add `.claude/cairn/learnings.jsonl merge=union` to `.gitattributes`, so learnings appended on two branches
+   merge instead of conflicting; `init` doesn't do this one.
 4. To use the test queue, point the project's scripts at it, as Calerion does:
    `"build": "node scripts/cairn/test.mjs build"`, `"simtest": "node scripts/cairn/test.mjs simtest"`.
 5. Hooks take effect from the next Claude Code session. `CAIRN_DISABLE=1` turns everything off.

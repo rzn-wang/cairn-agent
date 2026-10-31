@@ -1,0 +1,3 @@
+# Keep LF line endings in the working tree on every machine (as in Calerion Chronicles).
+* text=auto eol=lf
+*.png binary

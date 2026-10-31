@@ -1,0 +1,5 @@
+# Cairn's own store, if Cairn is ever installed on this repo (per-machine data).
+.claude/cairn/*
+!.claude/cairn/learnings.jsonl
+!.claude/cairn/config.json
+node_modules/

@@ -1,0 +1,135 @@
+<title>Calerion Crew Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a status strip, then one card per session (whatever needs Robin first), then the job queue and the wire. */
+:root {
+  --bg: #eef2f1; --surface: #ffffff; --ink: #18272a; --muted: #5a6c6f; --line: #d3dcda; --accent: #a8601a;
+  --busy: #23845a; --busy-bg: #dff1e8; --idle: #6b7a7c; --idle-bg: #e7ecec; --wait: #a8601a; --wait-bg: #f8e9d8;
+  --alert-bg: #fbefe1; --alert-line: #e6c49d;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121a1c; --surface: #1a2427; --ink: #e3ebea; --muted: #93a5a7; --line: #2b3a3d; --accent: #e09a52;
+  --busy: #5cc896; --busy-bg: #183428; --idle: #93a5a7; --idle-bg: #232f32; --wait: #e09a52; --wait-bg: #3a2a18;
+  --alert-bg: #2e2416; --alert-line: #5c4426; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121a1c; --surface: #1a2427; --ink: #e3ebea; --muted: #93a5a7; --line: #2b3a3d; --accent: #e09a52;
+  --busy: #5cc896; --busy-bg: #183428; --idle: #93a5a7; --idle-bg: #232f32; --wait: #e09a52; --wait-bg: #3a2a18;
+  --alert-bg: #2e2416; --alert-line: #5c4426; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; display: grid; gap: 28px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 0; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+.mono { font-family: var(--f-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; }
+.counts { display: flex; flex-wrap: wrap; gap: 6px 18px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.counts b { color: var(--ink); font-weight: 600; }
+.alert { background: var(--alert-bg); border: 1px solid var(--alert-line); border-radius: 8px; padding: 12px 16px; display: grid; gap: 4px; }
+.alert strong { color: var(--accent); }
+.notes { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; white-space: pre-wrap; max-width: 80ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card.waiting { border-color: var(--wait); }
+.top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.name { font-weight: 700; font-size: 16px; }
+.pill { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+.pill.busy { color: var(--busy); background: var(--busy-bg); }
+.pill.idle, .pill.open { color: var(--idle); background: var(--idle-bg); }
+.pill.waiting { color: var(--wait); background: var(--wait-bg); }
+.role { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; }
+.task { margin: 0; overflow-wrap: anywhere; }
+.sub { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 0 0 4px; }
+ul.list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+ul.list li { overflow-wrap: anywhere; font-size: 14px; }
+.jid { font-family: var(--f-mono); font-size: 12.5px; color: var(--accent); margin-right: 6px; }
+.files { font-family: var(--f-mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.rows { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.row { padding: 10px 16px; border-top: 1px solid var(--line); display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.row:first-child { border-top: 0; }
+.meta { font-size: 12.5px; color: var(--muted); }
+.empty { padding: 12px 16px; color: var(--muted); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+@media (max-width: 420px) { .grid, .two { grid-template-columns: 1fr; } main { padding-inline: 16px; } }
+</style>
+
+<main>
+  <header>
+    <div>
+      <h1>Who's on what</h1>
+      <div class="muted" id="updated"></div>
+    </div>
+    <div class="counts" id="counts"></div>
+  </header>
+  <div class="alert" id="alerts" hidden></div>
+  <section id="notes-wrap" hidden><h2>Commander's notes</h2><div class="notes" id="notes"></div></section>
+  <section><h2>Sessions</h2><div class="grid" id="sessions"></div></section>
+  <div class="two">
+    <section><h2>Jobs nobody holds yet</h2><div class="rows" id="unheld"></div></section>
+    <section><h2>Finished in the last 6 hours</h2><div class="rows" id="finished"></div></section>
+  </div>
+  <div class="two">
+    <section><h2>Waiting for a reply</h2><div class="rows" id="noreply"></div></section>
+    <section><h2>Notice board, last day</h2><div class="rows" id="notices"></div></section>
+  </div>
+</main>
+
+<script id="data" type="application/json">/*OVERVIEW_DATA*/null</script>
+<script>
+(function () {
+  let data = null;
+  try { data = JSON.parse(document.getElementById("data").textContent); } catch (e) { data = null; }
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const when = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" }); };
+  const since = (iso) => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : Math.round(m / 60) + " h ago"; };
+  if (!data) { $("updated").textContent = "No data yet: the commander publishes this page from Cairn's overview."; return; }
+
+  $("updated").textContent = "Updated " + when(data.at) + " (" + since(data.at) + ")";
+  const n = (s) => data.sessions.filter((x) => x.status === s).length;
+  const held = data.sessions.reduce((a, s) => a + s.jobs.length, 0);
+  [["sessions", data.sessions.length], ["busy", n("busy")], ["idle", n("idle")], ["waiting on you", n("waiting")], ["jobs held", held], ["jobs unheld", data.unheld.length], ["open threads to sort", (data.threads || {}).new || 0], ["threads tracked", (data.threads || {}).tracked || 0]]
+    .forEach(([label, v]) => { const s = el("span"); s.append(el("b", null, String(v)), " " + label); $("counts").append(s); });
+
+  const alerts = [];
+  if (data.waiting.length) alerts.push(["Waiting on you: ", data.waiting.join(", ")]);
+  data.load.forEach((f) => alerts.push(["Overloaded: ", f]));
+  if (alerts.length) { $("alerts").hidden = false; alerts.forEach(([k, v]) => { const d = el("div"); d.append(el("strong", null, k), v); $("alerts").append(d); }); }
+  if (data.notes) { $("notes-wrap").hidden = false; $("notes").textContent = data.notes; }
+
+  const rank = { waiting: 0, busy: 1, idle: 2, open: 3 };
+  data.sessions.slice().sort((a, b) => (rank[a.status] ?? 4) - (rank[b.status] ?? 4) || b.jobs.length - a.jobs.length).forEach((s) => {
+    const c = el("article", "card " + s.status);
+    const top = el("div", "top");
+    top.append(el("span", "name", s.name), el("span", "pill " + s.status, s.status === "waiting" ? "waiting on you" : s.status));
+    if (s.role) top.append(el("span", "role", s.role));
+    c.append(top);
+    c.append(el("p", "task", s.task || "Task not known yet"));
+    c.append(el("div", "meta", "Active " + (s.active || "?") + (s.state ? " · " + s.state.replace("_", " ") : "") + " · " + s.id));
+    if (s.jobs.length) {
+      const w = el("div"); w.append(el("p", "sub", "Jobs held (" + s.jobs.length + ")"));
+      const ul = el("ul", "list"); s.jobs.forEach((j) => { const li = el("li"); li.append(el("span", "jid", "#" + j.id), j.title); ul.append(li); });
+      w.append(ul); c.append(w);
+    }
+    if (s.open.length) {
+      const w = el("div"); w.append(el("p", "sub", "Open threads"));
+      const ul = el("ul", "list"); s.open.forEach((t) => ul.append(el("li", null, t))); w.append(ul); c.append(w);
+    }
+    if (s.files.length) c.append(el("div", "files", s.files.join("  ·  ")));
+    $("sessions").append(c);
+  });
+
+  const rows = (id, items, render, empty) => {
+    const box = $(id);
+    if (!items.length) { box.append(el("div", "empty", empty)); return; }
+    items.forEach((it) => { const r = el("div", "row"); render(r, it); box.append(r); });
+  };
+  rows("unheld", data.unheld, (r, j) => { const t = el("div"); t.append(el("span", "jid", "#" + j.id), j.title); r.append(t, el("div", "meta", "for " + j.to + " · from " + j.from + " · " + since(j.at))); }, "Every open job has someone on it.");
+  rows("finished", data.finished.slice().reverse(), (r, j) => { const t = el("div"); t.append(el("span", "jid", "#" + j.id), j.result || j.title); r.append(t, el("div", "meta", j.status + " by " + j.by + " · " + since(j.done))); }, "Nothing finished in the last 6 hours.");
+  rows("noreply", data.noReply, (r, m) => { r.append(el("div", null, m.line), el("div", "meta", m.from + " → " + m.to + " · " + since(m.at))); }, "No message is waiting for a reply.");
+  rows("notices", data.notices.slice().reverse(), (r, m) => { r.append(el("div", null, m.text), el("div", "meta", m.from + " · " + since(m.at))); }, "No notices today.");
+})();
+</script>

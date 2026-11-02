@@ -3,3 +3,4 @@
 !.claude/cairn/learnings.jsonl
 !.claude/cairn/config.json
 node_modules/
+*.tgz

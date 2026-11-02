@@ -1,0 +1,46 @@
+{
+  "name": "cairn-agent",
+  "version": "0.1.0",
+  "description": "Shared memory, live coordination and a code knowledge graph for Claude Code sessions working in the same repo.",
+  "type": "module",
+  "bin": {
+    "cairn": "bin/cairn.mjs"
+  },
+  "files": [
+    "bin",
+    "hooks",
+    "lib",
+    "assets",
+    "templates",
+    "test/fixtures",
+    "docs/CAIRN.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "test": "node bin/cairn.mjs selftest && node test/extract.test.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rznwang/Cairn.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rznwang/Cairn/issues"
+  },
+  "homepage": "https://github.com/rznwang/Cairn#readme",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "hooks",
+    "agents",
+    "multi-agent",
+    "memory",
+    "knowledge-graph",
+    "code-graph"
+  ],
+  "author": "Pixelnine",
+  "license": "MIT"
+}

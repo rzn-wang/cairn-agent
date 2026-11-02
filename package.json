@@ -25,12 +25,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rznwang/Cairn.git"
+    "url": "git+https://github.com/rzn-wang/cairn-agent.git"
   },
   "bugs": {
-    "url": "https://github.com/rznwang/Cairn/issues"
+    "url": "https://github.com/rzn-wang/cairn-agent/issues"
   },
-  "homepage": "https://github.com/rznwang/Cairn#readme",
+  "homepage": "https://github.com/rzn-wang/cairn-agent#readme",
   "keywords": [
     "claude-code",
     "claude",

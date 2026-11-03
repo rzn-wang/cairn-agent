@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1
+
+- Heavy runs and the test queue no longer wait forever on machines with less than about 8 GB of memory: the
+  free-memory floor is now 6 GB or 30% of the machine's memory, whichever is lower (`CAIRN_MIN_FREE_GB` still sets
+  it exactly). Found by the macOS CI runners, which have 7 GB.
+
+## 0.1.0
 
 First npm release, as `cairn-agent` (command: `cairn`). Before this, Cairn was copied into each project as
 `scripts/cairn/`.
